@@ -13,7 +13,12 @@ app.config['UPLOAD_EXTENSIONS'] = ['.jpg', '.png','jpeg']
 app.config['UPLOAD_FOLDER']  = uploadpath
 def openDb():
     global conn,cursor
-    conn=pymysql.connect(host="localhost",user="root",password="",database="gohealth")
+    host="containers-us-west-9.railway.app"
+    user="root"
+    passw="AlYZOR2BFyTkdMxHpGW4"
+    port=7376
+    dbname="railway"
+    conn=pymysql.connect(host=host,user=user,password=passw,port=port,database=dbname)
     cursor=conn.cursor(pymysql.cursors.DictCursor)
 def closeDb():
     cursor.close()
@@ -99,8 +104,9 @@ def updatepp(id):
             sql="SELECT profilepict FROM `useraccount` WHERE id=%s"
             cursor.execute(sql,id)
             filename=(cursor.fetchone())['profilepict']
-            if filename=='':
-                filename=secure_filename(uploaded_file.filename)
+            if filename!='':
+                os.remove(os.path.join(uploadpath,filename))
+            filename=secure_filename(uploaded_file.filename)
             uploaded_file.save(os.path.join(uploadpath, filename))
             sql="UPDATE `useraccount` SET profilepict=%s WHERE id=%s"
             cursor.execute(sql,(filename,id))
@@ -138,7 +144,7 @@ def updateProfile(id):
 @app.route('/bmi/<id>/history')
 def history(id):
     history=[]
-    sql="Select * from historybmi where id=%s"
+    sql="Select * from bmihistory where id=%s"
     openDb()
     cursor.execute(sql,(id))
     result=cursor.fetchall()
@@ -159,7 +165,7 @@ def bmi(id):
         elif( bmi<30) :
                 result="overweight"
         openDb()
-        sql="INSERT INTO `historybmi`(`id`, `bmi`, `date`) VALUES (%s,%s,%s)"
+        sql="INSERT INTO `bmihistory`(`id`, `bmi`, `date`) VALUES (%s,%s,%s)"
         val=(id,bmi,str(date.today()))
         cursor.execute(sql,val)
         conn.commit()
@@ -177,4 +183,4 @@ def bmi(id):
 def geturlfile(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
 if __name__=="__main__":
-    app.run(host="192.168.43.197", port=80,debug=True, threaded=True,processes=1)
+    app.run(host="192.168.43.150", port=80,debug=True,threaded=True)
